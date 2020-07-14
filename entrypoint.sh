@@ -45,9 +45,9 @@ else
 	echo "Must have a .distignore"
 	exit 1
 fi
-
+echo "workspace ls"
 ls $GITHUB_WORKSPACE
-
+echo "workspace/ninja-forms-mailchimp ls"
 ls $GITHUB_WORKSPACE/ninja-forms-mail-chimp
 
 if ! $GENERATE_ZIP; then
