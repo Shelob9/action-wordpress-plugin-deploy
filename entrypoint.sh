@@ -40,19 +40,15 @@ if [[ -e "$GITHUB_WORKSPACE/.distignore" ]]; then
 	echo "ℹ︎ Using .distignore"
 	# Copy from current branch to /trunk, excluding dotorg assets
 	# The --delete flag will delete anything in destination that no longer exists in source
-	rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" "$GITHUB_WORKSPACE/" ninja-forms-mail-chimp --delete --delete-excluded
+	rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" "$GITHUB_WORKSPACE/" "${SLUG}" --delete --delete-excluded
 else
 	echo "Must have a .distignore"
 	exit 1
 fi
-echo "workspace ls"
-ls $GITHUB_WORKSPACE
-echo "workspace/ninja-forms-mailchimp ls"
-ls $GITHUB_WORKSPACE/ninja-forms-mail-chimp
 
 if ! $GENERATE_ZIP; then
   echo "Generating zip file..."
-  cd "$GITHUB_WORKSPACE/ninja-forms-mail-chimp" || exit
+  cd "$GITHUB_WORKSPACE/${SLUG}" || exit
   zip -r "${GITHUB_WORKSPACE}/${SLUG}.zip" .
   echo "✓ Zip file generated!"
 fi
