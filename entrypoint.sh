@@ -52,11 +52,6 @@ if ! $GENERATE_ZIP; then
   cd "$GITHUB_WORKSPACE/${SLUG}"
   zip -r "${GITHUB_WORKSPACE}/${SLUG}.zip" .
   echo "✓ Zip file generated!"
-  pwd
-  echo "ls build dir"
-  ls .
 fi
-
-
 
 echo "✓ Plugin built!"
