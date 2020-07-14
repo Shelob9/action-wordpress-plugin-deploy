@@ -1,15 +1,15 @@
-name: 'WordPress Plugin Deploy'
-description: 'Deploy to the WordPress Plugin Repository'
-author: '10up'
+name: "WordPress Plugin Build"
+description: "Build an upload the zip of a plugin"
+author: "Josh"
 inputs:
   generate-zip:
-    description: 'Generate package zip file?'
-    default: false
+    description: "Generate package zip file?"
+    default: true
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: "docker"
+  image: "Dockerfile"
   args:
     - ${{ inputs.generate-zip }}
 branding:
-  icon: 'upload-cloud'
-  color: 'blue'
+  icon: "upload-cloud"
+  color: "blue"

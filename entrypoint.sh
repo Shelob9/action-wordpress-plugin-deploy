@@ -6,22 +6,8 @@
 # it does not exit with a 0, and I only care about the final exit.
 set -eo
 
-# Ensure SVN username and password are set
-# IMPORTANT: while secrets are encrypted and not viewable in the GitHub UI,
-# they are by necessity provided as plaintext in the context of the Action,
-# so do not echo or use debug mode unless you want your secrets exposed!
-if [[ -z "$SVN_USERNAME" ]]; then
-	echo "Set the SVN_USERNAME secret"
-	exit 1
-fi
-
-if [[ -z "$SVN_PASSWORD" ]]; then
-	echo "Set the SVN_PASSWORD secret"
-	exit 1
-fi
-
 # Set variables
-GENERATE_ZIP=false
+GENERATE_ZIP=true
 
 # Set options based on user input
 if [ -z "$1" ]; then
@@ -38,7 +24,7 @@ echo "ℹ︎ SLUG is $SLUG"
 if [[ -z "$VERSION" ]]; then
 	VERSION="${GITHUB_REF#refs/tags/}"
 	VERSION="${VERSION#v}"
-fi
+fi 
 echo "ℹ︎ VERSION is $VERSION"
 
 if [[ -z "$ASSETS_DIR" ]]; then
@@ -64,72 +50,9 @@ if [[ -e "$GITHUB_WORKSPACE/.distignore" ]]; then
 	# The --delete flag will delete anything in destination that no longer exists in source
 	rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" "$GITHUB_WORKSPACE/" trunk/ --delete --delete-excluded
 else
-	echo "ℹ︎ Using .gitattributes"
-
-	cd "$GITHUB_WORKSPACE"
-
-	# "Export" a cleaned copy to a temp directory
-	TMP_DIR="/github/archivetmp"
-	mkdir "$TMP_DIR"
-
-	git config --global user.email "10upbot+github@10up.com"
-	git config --global user.name "10upbot on GitHub"
-
-	# If there's no .gitattributes file, write a default one into place
-	if [[ ! -e "$GITHUB_WORKSPACE/.gitattributes" ]]; then
-		cat > "$GITHUB_WORKSPACE/.gitattributes" <<-EOL
-		/$ASSETS_DIR export-ignore
-		/.gitattributes export-ignore
-		/.gitignore export-ignore
-		/.github export-ignore
-		EOL
-
-		# Ensure we are in the $GITHUB_WORKSPACE directory, just in case
-		# The .gitattributes file has to be committed to be used
-		# Just don't push it to the origin repo :)
-		git add .gitattributes && git commit -m "Add .gitattributes file"
-	fi
-
-	# This will exclude everything in the .gitattributes file with the export-ignore flag
-	git archive HEAD | tar x --directory="$TMP_DIR"
-
-	cd "$SVN_DIR"
-
-	# Copy from clean copy to /trunk, excluding dotorg assets
-	# The --delete flag will delete anything in destination that no longer exists in source
-	rsync -rc "$TMP_DIR/" trunk/ --delete --delete-excluded
+	echo "Must have a .distignore"
+	exit 1
 fi
-
-# Copy dotorg assets to /assets
-if [[ -d "$GITHUB_WORKSPACE/$ASSETS_DIR/" ]]; then
-	rsync -rc "$GITHUB_WORKSPACE/$ASSETS_DIR/" assets/ --delete
-else
-	echo "ℹ︎ No assets directory found; skipping asset copy"
-fi
-
-# Add everything and commit to SVN
-# The force flag ensures we recurse into subdirectories even if they are already added
-# Suppress stdout in favor of svn status later for readability
-echo "➤ Preparing files..."
-svn add . --force > /dev/null
-
-# SVN delete all deleted files
-# Also suppress stdout here
-svn status | grep '^\!' | sed 's/! *//' | xargs -I% svn rm %@ > /dev/null
-
-# Copy tag locally to make this a single commit
-echo "➤ Copying tag..."
-svn cp "trunk" "tags/$VERSION"
-
-# Fix screenshots getting force downloaded when clicking them
-# https://developer.wordpress.org/plugins/wordpress-org/plugin-assets/
-svn propset svn:mime-type image/png assets/*.png || true
-svn propset svn:mime-type image/jpeg assets/*.jpg || true
-
-svn status
-
-echo "➤ Committing files..."
-svn commit -m "Update to version $VERSION from GitHub" --no-auth-cache --non-interactive  --username "$SVN_USERNAME" --password "$SVN_PASSWORD"
 
 if ! $GENERATE_ZIP; then
   echo "Generating zip file..."
@@ -138,4 +61,4 @@ if ! $GENERATE_ZIP; then
   echo "✓ Zip file generated!"
 fi
 
-echo "✓ Plugin deployed!"
+echo "✓ Plugin built!"
