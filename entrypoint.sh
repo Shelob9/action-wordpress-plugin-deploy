@@ -35,21 +35,24 @@ echo "ℹ︎ ASSETS_DIR is $ASSETS_DIR"
 SVN_URL="https://plugins.svn.wordpress.org/${SLUG}/"
 SVN_DIR="/github/svn-${SLUG}"
 
-
 echo "➤ Copying files..."
 if [[ -e "$GITHUB_WORKSPACE/.distignore" ]]; then
 	echo "ℹ︎ Using .distignore"
 	# Copy from current branch to /trunk, excluding dotorg assets
 	# The --delete flag will delete anything in destination that no longer exists in source
-	rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" "$GITHUB_WORKSPACE/" trunk/ --delete --delete-excluded
+	rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" "$GITHUB_WORKSPACE/" ninja-forms-mail-chimp --delete --delete-excluded
 else
 	echo "Must have a .distignore"
 	exit 1
 fi
 
+ls $GITHUB_WORKSPACE
+
+ls $GITHUB_WORKSPACE/ninja-forms-mail-chimp
+
 if ! $GENERATE_ZIP; then
   echo "Generating zip file..."
-  cd "$SVN_DIR/trunk" || exit
+  cd "$GITHUB_WORKSPACE/ninja-forms-mail-chimp" || exit
   zip -r "${GITHUB_WORKSPACE}/${SLUG}.zip" .
   echo "✓ Zip file generated!"
 fi
